@@ -20,6 +20,9 @@ public class AppTest
         super( testName );
         int kk=2;
         kk++;
+        
+        kk=123;
+        
     }
 
     /**
