@@ -18,6 +18,8 @@ public class AppTest
     public AppTest( String testName )
     {
         super( testName );
+        int kk=2;
+        kk++;
     }
 
     /**
