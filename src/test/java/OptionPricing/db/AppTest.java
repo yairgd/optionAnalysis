@@ -18,8 +18,6 @@ public class AppTest
     public AppTest( String testName )
     {
         super( testName );
-        int gg=5;
-        gg++;
     }
 
     /**
