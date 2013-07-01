@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<actions>
+        <action>
+            <actionName>rebuild</actionName>
+            <goals>
+                <goal>clean</goal>
+                <goal>install</goal>
+                
+            </goals>
+        </action>
+        <action>
+            <actionName>build-with-dependencies</actionName>
+            <reactor>also-make</reactor>
+            <goals>
+                <goal>install</goal>
+                <goal>-Pjar-with-deps</goal>
+            </goals>
+        </action>
+        <action>
+            <actionName>CUSTOM-aaaaaaaaa</actionName>
+            <displayName>aaaaaaaaa</displayName>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>jar-with-deps</activatedProfile>
+            </activatedProfiles>
+        </action>
+        <action>
+            <actionName>CUSTOM-full_lib</actionName>
+            <displayName>full_lib</displayName>
+            <goals>
+                <goal>install</goal>
+            </goals>
+            <activatedProfiles>
+                <activatedProfile>jar-with-deps</activatedProfile>
+            </activatedProfiles>
+        </action>
+    </actions>
