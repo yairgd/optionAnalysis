@@ -10,7 +10,9 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.Hashtable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -24,6 +26,11 @@ public class DataFetch {
     private Hashtable<String, String> callList = new Hashtable<String, String>();
     private Hashtable<String, String> putList = new Hashtable<String, String>();
     private ArrayList<Double> open = new ArrayList<Double>();
+    private ArrayList<Double> high = new ArrayList<Double>();
+    private ArrayList<Double> low = new ArrayList<Double>();
+    private ArrayList<Double> close = new ArrayList<Double>();
+    private ArrayList<Double> volume = new ArrayList<Double>();
+    private ArrayList<Double> adjClose = new ArrayList<Double>();
     private String stock;
 
     public static void main(String[] args) {
@@ -36,8 +43,8 @@ public class DataFetch {
 
 
         DataFetch tableEg = new DataFetch("AMD");
-        // tableEg.fetchStock("06/27/2007","06/27/2010");
-        tableEg.fetchOptionData();
+        tableEg.fetchStock("27/6/2007", "28/2/2010");
+        // tableEg.fetchOptionData();
     }
 
     public DataFetch(String _stock) {
@@ -87,14 +94,17 @@ public class DataFetch {
     public void fetchStock(String date1, String date2) {
 
         try {
-            DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
-            Date startDate = df.parse(date1);
-            Date endDate = df.parse(date2);
+            DateFormat df = new SimpleDateFormat("dd/mm/yyyy");
+            Calendar startDate = new GregorianCalendar();//df.parse(date1).
+            Calendar endDate = Calendar.getInstance();// df.parse(date2);
+
+            startDate.setTime(df.parse(date1));
+            endDate.setTime(df.parse(date2));
             try {
                 //try {
                 Reader reader = null;
                 InputStream input = null;
-                input = new URL("http://ichart.finance.yahoo.com/table.csv?s=" + stock + "&d="+startDate.getDay()+"&e=30&f=2013&g=d&a=2&b=21&c=1983&ignore=.csv").openStream();
+                input = new URL("http://ichart.finance.yahoo.com/table.csv?s=" + stock + "&d=" + startDate.get(Calendar.DAY_OF_MONTH) + "&e=" + startDate.get(Calendar.MONTH) + "&f=" + startDate.get(Calendar.YEAR) + "&g=d&a=" + endDate.get(Calendar.DAY_OF_MONTH) + "&b=" + endDate.get(Calendar.MONTH) + "&c=" + endDate.get(Calendar.YEAR) + "&ignore=.csv").openStream();
                 reader = new InputStreamReader(input, "UTF-8");
                 BufferedReader brReadMe = new BufferedReader(reader);
                 String strLine = brReadMe.readLine();
@@ -102,18 +112,14 @@ public class DataFetch {
                 //for all lines
                 while (strLine != null) {
                     try {
-                        //if line contains "(see also"
+                        // get data fro the line
                         String lineEle[] = strLine.split(",");
-                        getOpen().add(Double.parseDouble(lineEle[1]));
-
-
-                        //   if (strLine.toLowerCase().contains("(see also")) {
-                        //       //write line from "(see also" to ")"
-                        //       int iBegin = strLine.toLowerCase().indexOf("(see also");
-                        //       String strTemp = strLine.substring(iBegin);
-                        //       int iLittleEnd = strTemp.indexOf(")");
-                        //       System.out.println(strLine.substring(iBegin, iBegin + iLittleEnd));
-                        //   }
+                        open.add(Double.parseDouble(lineEle[1]));
+                        high.add(Double.parseDouble(lineEle[2]));
+                        low.add(Double.parseDouble(lineEle[3]));
+                        close.add(Double.parseDouble(lineEle[4]));
+                        volume.add(Double.parseDouble(lineEle[5]));
+                        adjClose.add(Double.parseDouble(lineEle[6]));
 
                         //update line
                         strLine = brReadMe.readLine();
@@ -169,5 +175,40 @@ public class DataFetch {
      */
     public void setStock(String stock) {
         this.stock = stock;
+    }
+
+    /**
+     * @return the high
+     */
+    public ArrayList<Double> getHigh() {
+        return high;
+    }
+
+    /**
+     * @return the low
+     */
+    public ArrayList<Double> getLow() {
+        return low;
+    }
+
+    /**
+     * @return the close
+     */
+    public ArrayList<Double> getClose() {
+        return close;
+    }
+
+    /**
+     * @return the volume
+     */
+    public ArrayList<Double> getVolume() {
+        return volume;
+    }
+
+    /**
+     * @return the adjClose
+     */
+    public ArrayList<Double> getAdjClose() {
+        return adjClose;
     }
 }

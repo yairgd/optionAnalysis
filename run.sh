@@ -1,1 +1,1 @@
- mvn exec:java -Dexec.mainClass="OptionPricing.db.TableEg"
+ mvn exec:java -Dexec.mainClass="OptionPricing.db.DataFetch"
