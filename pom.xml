@@ -28,6 +28,12 @@
             <artifactId>jsoup</artifactId>
             <version>1.7.2</version>
         </dependency>
+        
+        <dependency>
+        <groupId>com.google.guava</groupId>
+        <artifactId>guava-primitives</artifactId>
+        <version>r03</version>
+      </dependency>
     </dependencies>
         
         

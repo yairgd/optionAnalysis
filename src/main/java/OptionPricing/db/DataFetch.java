@@ -1,5 +1,6 @@
 package OptionPricing.db;
 
+import com.google.common.primitives.Doubles;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +22,16 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.Arrays;
+import java.util.List;
+
+import com.mathworks.extern.java.MWCellArray;
+import com.mathworks.toolbox.javabuilder.MWCharArray;
+import com.mathworks.toolbox.javabuilder.MWClassID;
+import com.mathworks.toolbox.javabuilder.MWComplexity;
+import com.mathworks.toolbox.javabuilder.MWNumericArray;
+import com.mathworks.toolbox.javabuilder.MWStructArray;
+
 public class DataFetch {
 
     private Hashtable<String, String> callList = new Hashtable<String, String>();
@@ -32,8 +43,9 @@ public class DataFetch {
     private ArrayList<Double> volume = new ArrayList<Double>();
     private ArrayList<Double> adjClose = new ArrayList<Double>();
     private String stock;
+    private MWStructArray prices;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws ParseException {
         /*
          DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
          Date startDate = df.parse(startDate);
@@ -41,9 +53,9 @@ public class DataFetch {
 
 
 
-
         DataFetch tableEg = new DataFetch("AMD");
         tableEg.fetchStock("27/6/2007", "28/2/2010");
+        double []d = tableEg.getOpen();
         // tableEg.fetchOptionData();
     }
 
@@ -94,7 +106,7 @@ public class DataFetch {
     public void fetchStock(String date1, String date2) {
 
         try {
-            DateFormat df = new SimpleDateFormat("dd/mm/yyyy");
+            DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
             Calendar startDate = new GregorianCalendar();//df.parse(date1).
             Calendar endDate = Calendar.getInstance();// df.parse(date2);
 
@@ -129,6 +141,7 @@ public class DataFetch {
                     }
                 } //end for
                 reader.close();
+            //    priceToMatalab();
                 //
             } catch (IOException ex) {
                 Logger.getLogger(DataFetch.class.getName()).log(Level.SEVERE, null, ex);
@@ -140,6 +153,26 @@ public class DataFetch {
 
 
 
+    }
+
+    public void priceToMatalab() {
+
+        final String[] pricesFieldsNames = {"open", "high", "low", "close", "volume", "adjClose"};
+        prices = new MWStructArray(1, 1, pricesFieldsNames);
+ //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
+	//double[][] openArray = new double[1][open.size()];
+
+        for (int i = 0; i < 1; i++) {
+            prices.set("open", i+1, open.get(i));
+            prices.set("high", i+1, high.get(i));
+            prices.set("low", i+1, low.get(i));
+            prices.set("close", i+1, close.get(i));
+            prices.set("volume", i+1, volume.get(i));
+            prices.set("adjClose", i+1, adjClose.get(i));
+
+        }
+
+     // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
     }
 
     /**
@@ -159,8 +192,8 @@ public class DataFetch {
     /**
      * @return the open
      */
-    public ArrayList<Double> getOpen() {
-        return open;
+    public double[] getOpen() {
+        return Doubles.toArray(open);
     }
 
     /**
@@ -180,35 +213,43 @@ public class DataFetch {
     /**
      * @return the high
      */
-    public ArrayList<Double> getHigh() {
-        return high;
+    public double[] getHigh() {
+        return Doubles.toArray(high);
     }
 
     /**
      * @return the low
      */
-    public ArrayList<Double> getLow() {
-        return low;
+    public double[] getLow() {
+        return Doubles.toArray(low);
     }
 
     /**
      * @return the close
      */
-    public ArrayList<Double> getClose() {
-        return close;
+    public double[] getClose() {
+        return Doubles.toArray(close);
     }
 
     /**
      * @return the volume
      */
-    public ArrayList<Double> getVolume() {
-        return volume;
+    public double[] getVoulme() {
+        return Doubles.toArray(volume);
     }
+
 
     /**
      * @return the adjClose
      */
-    public ArrayList<Double> getAdjClose() {
-        return adjClose;
+    public double[] getAdjClose() {
+        return Doubles.toArray(adjClose);
+    }
+
+    /**
+     * @return the prices
+     */
+    public MWStructArray getPrices() {
+        return prices;
     }
 }
