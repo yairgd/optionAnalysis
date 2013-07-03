@@ -34,16 +34,10 @@ import com.mathworks.toolbox.javabuilder.MWStructArray;
 
 public class DataFetch {
 
-    private Hashtable<String, String> callList = new Hashtable<String, String>();
-    private Hashtable<String, String> putList = new Hashtable<String, String>();
-    private ArrayList<Double> open = new ArrayList<Double>();
-    private ArrayList<Double> high = new ArrayList<Double>();
-    private ArrayList<Double> low = new ArrayList<Double>();
-    private ArrayList<Double> close = new ArrayList<Double>();
-    private ArrayList<Double> volume = new ArrayList<Double>();
-    private ArrayList<Double> adjClose = new ArrayList<Double>();
     private String stock;
-    private MWStructArray prices;
+    private StockPrice stockPrice = new StockPrice();
+    private ArrayList<OptionPrice> putOptionList = new ArrayList<OptionPrice>();
+    private ArrayList<OptionPrice> callOptionList = new ArrayList<OptionPrice>();
 
     public static void main(String[] args) throws ParseException {
         /*
@@ -55,8 +49,8 @@ public class DataFetch {
 
         DataFetch tableEg = new DataFetch("AMD");
         tableEg.fetchStock("27/6/2007", "28/2/2010");
-        double []d = tableEg.getOpen();
-        // tableEg.fetchOptionData();
+        double[] d = tableEg.getStockPrice().getOpen();
+        tableEg.fetchOptionData();
     }
 
     public DataFetch(String _stock) {
@@ -85,11 +79,17 @@ public class DataFetch {
                 for (Element row : table.select("tr")) {
                     Elements tds = row.select("td");
                     if (tds.size() == 8) {
+                        OptionPrice optionPrice = new OptionPrice();
+
                         System.out.println(tds.get(0).text() + ":" + tds.get(1).text());
                         if (is_call == true) {
-                            callList.put(tds.get(1).text(), tds.get(0).text());
+                            getCallOptionList().add(optionPrice);
+                            optionPrice.setSybol(tds.get(0).text());
+                            //  callList.put(tds.get(1).text(), tds.get(0).text());
                         } else {
-                            putList.put(tds.get(1).text(), tds.get(0).text());
+                            //   putList.put(tds.get(1).text(), tds.get(0).text());
+                            getPutOptionList().add(optionPrice);
+                            optionPrice.setSybol(tds.get(0).text());
                         }
                     }
 
@@ -126,12 +126,12 @@ public class DataFetch {
                     try {
                         // get data fro the line
                         String lineEle[] = strLine.split(",");
-                        open.add(Double.parseDouble(lineEle[1]));
-                        high.add(Double.parseDouble(lineEle[2]));
-                        low.add(Double.parseDouble(lineEle[3]));
-                        close.add(Double.parseDouble(lineEle[4]));
-                        volume.add(Double.parseDouble(lineEle[5]));
-                        adjClose.add(Double.parseDouble(lineEle[6]));
+                        getStockPrice().open.add(Double.parseDouble(lineEle[1]));
+                        getStockPrice().high.add(Double.parseDouble(lineEle[2]));
+                        getStockPrice().low.add(Double.parseDouble(lineEle[3]));
+                        getStockPrice().close.add(Double.parseDouble(lineEle[4]));
+                        getStockPrice().volume.add(Double.parseDouble(lineEle[5]));
+                        getStockPrice().adjClose.add(Double.parseDouble(lineEle[6]));
 
                         //update line
                         strLine = brReadMe.readLine();
@@ -141,7 +141,7 @@ public class DataFetch {
                     }
                 } //end for
                 reader.close();
-            //    priceToMatalab();
+                // priceToMatalab();
                 //
             } catch (IOException ex) {
                 Logger.getLogger(DataFetch.class.getName()).log(Level.SEVERE, null, ex);
@@ -155,59 +155,210 @@ public class DataFetch {
 
     }
 
+    /**
+     * @return the putOptionList
+     */
+    public ArrayList<OptionPrice> getPutOptionList() {
+        return putOptionList;
+    }
+
+    /**
+     * @return the callOptionList
+     */
+    public ArrayList<OptionPrice> getCallOptionList() {
+        return callOptionList;
+    }
+
+    /**
+     * @param callOptionList the callOptionList to set
+     */
+    public void setCallOptionList(ArrayList<OptionPrice> callOptionList) {
+        this.callOptionList = callOptionList;
+    }
+
+    /**
+     * @return the stockPrice
+     */
+    public StockPrice getStockPrice() {
+        return stockPrice;
+    }
+
+    /**
+     * @param stockPrice the stockPrice to set
+     */
+    public void setStockPrice(StockPrice stockPrice) {
+        this.stockPrice = stockPrice;
+    }
+}
+
+class OptionPrice {
+
+    private String sybol;
+    private Double strike, last, change, bid, ask;
+    private Integer volume, openInt;
+    private MWStructArray prices;
+
     public void priceToMatalab() {
 
         final String[] pricesFieldsNames = {"open", "high", "low", "close", "volume", "adjClose"};
-        prices = new MWStructArray(1, 1, pricesFieldsNames);
- //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
-	//double[][] openArray = new double[1][open.size()];
+        setPrices(new MWStructArray(1, 1, pricesFieldsNames));
+        //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
+        //double[][] openArray = new double[1][open.size()];
 
-        for (int i = 0; i < 1; i++) {
-            prices.set("open", i+1, open.get(i));
-            prices.set("high", i+1, high.get(i));
-            prices.set("low", i+1, low.get(i));
-            prices.set("close", i+1, close.get(i));
-            prices.set("volume", i+1, volume.get(i));
-            prices.set("adjClose", i+1, adjClose.get(i));
+        //prices.set ("symbol",1,symbol);
+        getPrices().set("strike", 1, getStrike());
+        getPrices().set("last", 1, getLast());
+        getPrices().set("change", 1, getChange());
+        getPrices().set("bid", 1, getBid());
+        getPrices().set("ask", 1, getAsk());
+        getPrices().set("openInt", 1, getOpenInt());
 
-        }
 
-     // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
+
+        // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
     }
 
     /**
-     * @return the callList
+     * @return the sybol
      */
-    public Hashtable<String, String> getCallList() {
-        return callList;
+    public String getSybol() {
+        return sybol;
     }
 
     /**
-     * @return the putList
+     * @param sybol the sybol to set
      */
-    public Hashtable<String, String> getPutList() {
-        return putList;
+    public void setSybol(String sybol) {
+        this.sybol = sybol;
     }
+
+    /**
+     * @return the strike
+     */
+    public Double getStrike() {
+        return strike;
+    }
+
+    /**
+     * @param strike the strike to set
+     */
+    public void setStrike(Double strike) {
+        this.strike = strike;
+    }
+
+    /**
+     * @return the last
+     */
+    public Double getLast() {
+        return last;
+    }
+
+    /**
+     * @param last the last to set
+     */
+    public void setLast(Double last) {
+        this.last = last;
+    }
+
+    /**
+     * @return the change
+     */
+    public Double getChange() {
+        return change;
+    }
+
+    /**
+     * @param change the change to set
+     */
+    public void setChange(Double change) {
+        this.change = change;
+    }
+
+    /**
+     * @return the bid
+     */
+    public Double getBid() {
+        return bid;
+    }
+
+    /**
+     * @param bid the bid to set
+     */
+    public void setBid(Double bid) {
+        this.bid = bid;
+    }
+
+    /**
+     * @return the ask
+     */
+    public Double getAsk() {
+        return ask;
+    }
+
+    /**
+     * @param ask the ask to set
+     */
+    public void setAsk(Double ask) {
+        this.ask = ask;
+    }
+
+    /**
+     * @return the volume
+     */
+    public Integer getVolume() {
+        return volume;
+    }
+
+    /**
+     * @param volume the volume to set
+     */
+    public void setVolume(Integer volume) {
+        this.volume = volume;
+    }
+
+    /**
+     * @return the openInt
+     */
+    public Integer getOpenInt() {
+        return openInt;
+    }
+
+    /**
+     * @param openInt the openInt to set
+     */
+    public void setOpenInt(Integer openInt) {
+        this.openInt = openInt;
+    }
+
+    /**
+     * @return the prices
+     */
+    public MWStructArray getPrices() {
+        return prices;
+    }
+
+    /**
+     * @param prices the prices to set
+     */
+    public void setPrices(MWStructArray prices) {
+        this.prices = prices;
+    }
+}
+
+class StockPrice {
+
+    public ArrayList<Double> open = new ArrayList<Double>();
+    public ArrayList<Double> high = new ArrayList<Double>();
+    public ArrayList<Double> low = new ArrayList<Double>();
+    public ArrayList<Double> close = new ArrayList<Double>();
+    public ArrayList<Double> volume = new ArrayList<Double>();
+    public ArrayList<Double> adjClose = new ArrayList<Double>();
 
     /**
      * @return the open
      */
     public double[] getOpen() {
         return Doubles.toArray(open);
-    }
-
-    /**
-     * @return the stock
-     */
-    public String getStock() {
-        return stock;
-    }
-
-    /**
-     * @param stock the stock to set
-     */
-    public void setStock(String stock) {
-        this.stock = stock;
     }
 
     /**
@@ -238,18 +389,10 @@ public class DataFetch {
         return Doubles.toArray(volume);
     }
 
-
     /**
      * @return the adjClose
      */
     public double[] getAdjClose() {
         return Doubles.toArray(adjClose);
-    }
-
-    /**
-     * @return the prices
-     */
-    public MWStructArray getPrices() {
-        return prices;
     }
 }
