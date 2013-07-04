@@ -39,8 +39,6 @@ public class DataFetch {
     private ArrayList<OptionPrice> putOptionList = new ArrayList<OptionPrice>();
     private ArrayList<OptionPrice> callOptionList = new ArrayList<OptionPrice>();
 
-    private OptionData call;
-    private OptionData put;
     public static void main(String[] args) throws ParseException {
         /*
          DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
@@ -143,7 +141,7 @@ public class DataFetch {
                     }
                 } //end for
                 reader.close();
-                priceToMatalab();
+                //    priceToMatalab();
                 //
             } catch (IOException ex) {
                 Logger.getLogger(DataFetch.class.getName()).log(Level.SEVERE, null, ex);
@@ -156,6 +154,37 @@ public class DataFetch {
 
 
     }
+    
+    public MWStructArray getCallOptionListToMatlab()
+    {
+        return createOptionPriceStruct(callOptionList);
+    }
+     public MWStructArray getOptionPutListToMatlab()
+    {
+        return createOptionPriceStruct(putOptionList);
+    }
+    
+    private MWStructArray createOptionPriceStruct(ArrayList<OptionPrice> optionPriceArray) {
+
+        int i = 1;
+        final String[] pricesFieldsNames = {"symbol", "strike", "last", "change", "bid", "ask", "openInt"};
+        MWStructArray matlabOptionPrice = new MWStructArray(optionPriceArray.size(), 1, pricesFieldsNames);
+
+   
+        for (OptionPrice optionPrice : optionPriceArray) {
+            matlabOptionPrice.set("symbol", i, optionPrice.getSybol());
+            matlabOptionPrice.set("strike", i, optionPrice.getStrike());
+            matlabOptionPrice.set("last", i, optionPrice.getLast());
+            matlabOptionPrice.set("change", i, optionPrice.getChange());
+            matlabOptionPrice.set("bid", i, optionPrice.getBid());
+            matlabOptionPrice.set("ask", i, optionPrice.getAsk());
+            matlabOptionPrice.set("openInt", i, optionPrice.getOpenInt());
+            i=i+1;
+        }
+        return matlabOptionPrice;
+        // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
+    }
+
 
     /**
      * @return the putOptionList
@@ -195,19 +224,20 @@ public class DataFetch {
 
 class OptionPrice {
 
-    private String sybol;
+    private String symbol;
     private Double strike, last, change, bid, ask;
     private Integer volume, openInt;
     private MWStructArray prices;
 
+    
     public void priceToMatalab() {
 
-        final String[] pricesFieldsNames = {"open", "high", "low", "close", "volume", "adjClose"};
+        final String[] pricesFieldsNames = {"symbol", "strike", "last", "change", "bid", "ask", "openInt"};
         setPrices(new MWStructArray(1, 1, pricesFieldsNames));
         //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
         //double[][] openArray = new double[1][open.size()];
 
-        //prices.set ("symbol",1,symbol);
+        getPrices().set("symbol", 1, symbol);
         getPrices().set("strike", 1, getStrike());
         getPrices().set("last", 1, getLast());
         getPrices().set("change", 1, getChange());
@@ -224,14 +254,14 @@ class OptionPrice {
      * @return the sybol
      */
     public String getSybol() {
-        return sybol;
+        return symbol;
     }
 
     /**
      * @param sybol the sybol to set
      */
-    public void setSybol(String sybol) {
-        this.sybol = sybol;
+    public void setSybol(String symbol) {
+        this.symbol = symbol;
     }
 
     /**
@@ -397,39 +427,7 @@ class StockPrice {
     public double[] getAdjClose() {
         return Doubles.toArray(adjClose);
     }
-
-    /**
-     * @return the prices
-     */
-    public MWStructArray getPrices() {
-        return prices;
-    }
 }
 
-
- class OptionData {
-    private Double strike,last,change;
-    private String symbol;
-    private Integer voulme,openInt;
- 
-
-    public void priceToMatalab() {
-
-        final String[] pricesFieldsNames = {"open", "high", "low", "close", "volume", "adjClose"};
-        MWStructArray prices = new MWStructArray(1, 1, pricesFieldsNames);
- //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
-	//double[][] openArray = new double[1][open.size()];
-
-        for (int i = 0; i < 1; i++) {
-            prices.set("open", i+1, open.get(i));
-            prices.set("high", i+1, high.get(i));
-            prices.set("low", i+1, low.get(i));
-            prices.set("close", i+1, close.get(i));
-            prices.set("volume", i+1, volume.get(i));
-            prices.set("adjClose", i+1, adjClose.get(i));
-
-        }
-
-     // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
-    }
-}
+    
+   
