@@ -45,6 +45,8 @@ public class DataFetch {
     private String stock;
     private MWStructArray prices;
 
+    private OptionData call;
+    private OptionData put;
     public static void main(String[] args) throws ParseException {
         /*
          DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
@@ -56,7 +58,7 @@ public class DataFetch {
         DataFetch tableEg = new DataFetch("AMD");
         tableEg.fetchStock("27/6/2007", "28/2/2010");
         double []d = tableEg.getOpen();
-        // tableEg.fetchOptionData();
+          tableEg.fetchOptionData();
     }
 
     public DataFetch(String _stock) {
@@ -141,7 +143,7 @@ public class DataFetch {
                     }
                 } //end for
                 reader.close();
-            //    priceToMatalab();
+                priceToMatalab();
                 //
             } catch (IOException ex) {
                 Logger.getLogger(DataFetch.class.getName()).log(Level.SEVERE, null, ex);
@@ -251,5 +253,33 @@ public class DataFetch {
      */
     public MWStructArray getPrices() {
         return prices;
+    }
+}
+
+
+ class OptionData {
+    private Double strike,last,change;
+    private String symbol;
+    private Integer voulme,openInt;
+ 
+
+    public void priceToMatalab() {
+
+        final String[] pricesFieldsNames = {"open", "high", "low", "close", "volume", "adjClose"};
+        MWStructArray prices = new MWStructArray(1, 1, pricesFieldsNames);
+ //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
+	//double[][] openArray = new double[1][open.size()];
+
+        for (int i = 0; i < 1; i++) {
+            prices.set("open", i+1, open.get(i));
+            prices.set("high", i+1, high.get(i));
+            prices.set("low", i+1, low.get(i));
+            prices.set("close", i+1, close.get(i));
+            prices.set("volume", i+1, volume.get(i));
+            prices.set("adjClose", i+1, adjClose.get(i));
+
+        }
+
+     // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
     }
 }
