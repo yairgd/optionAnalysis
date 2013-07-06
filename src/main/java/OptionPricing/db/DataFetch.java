@@ -31,6 +31,8 @@ import com.mathworks.toolbox.javabuilder.MWClassID;
 import com.mathworks.toolbox.javabuilder.MWComplexity;
 import com.mathworks.toolbox.javabuilder.MWNumericArray;
 import com.mathworks.toolbox.javabuilder.MWStructArray;
+import java.text.DateFormatSymbols;
+import java.util.Collections;
 
 public class DataFetch {
 
@@ -38,7 +40,9 @@ public class DataFetch {
     private StockPrice stockPrice = new StockPrice();
     private ArrayList<OptionPrice> putOptionList = new ArrayList<OptionPrice>();
     private ArrayList<OptionPrice> callOptionList = new ArrayList<OptionPrice>();
+        private ArrayList<OptionMonth> optionMonthList = new ArrayList<OptionMonth>();
 
+    
     public static void main(String[] args) throws ParseException {
         /*
          DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
@@ -49,50 +53,73 @@ public class DataFetch {
 
         DataFetch tableEg = new DataFetch("AMD");
         tableEg.fetchStock("27/6/2007", "28/2/2010");
-        double[] d = tableEg.getStockPrice().getOpen();
-        tableEg.fetchOptionData();
+        double[] d = tableEg.getStockPrice().getClose();
+        tableEg.fetchOptionData(2013, 7);
+        tableEg.fetchOptionData(2013, 8);
     }
 
     public DataFetch(String _stock) {
         stock = _stock;
     }
 
-    public void fetchOptionData() {
+    public void fetchOptionData(double year, double month) {
         //String html = "http://publib.boulder.ibm.com/infocenter/iadthelp/v7r1/topic/" +
         //    "com.ibm.etools.iseries.toolbox.doc/htmtblex.htm";
-
-        String html = "http://finance.yahoo.com/q/op?s=" + stock + "+Options";
+        OptionMonth optionMonth = new OptionMonth();
+        optionMonthList.add(optionMonth);
+        
+        String html = "http://finance.yahoo.com/q/op?s=" + stock + "+&m" + year + "-" + month;
         try {
 
             boolean is_call = true;
             Document doc = Jsoup.connect(html).get();
 
             for (Element table : doc.select("table[class=yfnc_datamodoutline1]")) {
-
-
                 Elements tableHeaderEles = table.select("th");
-                System.out.println("headers");
+                //System.out.println("headers");
                 for (int i = 0; i < tableHeaderEles.size(); i++) {
-                    System.out.println(tableHeaderEles.get(i).text());
+                   // System.out.println(tableHeaderEles.get(i).text());
                 }
 
                 for (Element row : table.select("tr")) {
                     Elements tds = row.select("td");
                     if (tds.size() == 8) {
                         OptionPrice optionPrice = new OptionPrice();
-
-                        System.out.println(tds.get(0).text() + ":" + tds.get(1).text());
+                        optionPrice.setSybol(tds.get(1).text());
+                        optionPrice.setStrike(Double.parseDouble(tds.get(0).text()));
+                        optionPrice.setLast(Double.parseDouble(tds.get(2).text()));
+                        optionPrice.setChange(Double.parseDouble(tds.get(3).text()));
+                        try {
+                            optionPrice.setBid(Double.parseDouble(tds.get(4).text()));
+                        } catch (Exception e) {
+                            optionPrice.setBid(0.0);
+                        }
+                        try {
+                            optionPrice.setAsk(Double.parseDouble(tds.get(5).text()));
+                        } catch (Exception e) {
+                            optionPrice.setAsk(0.0);
+                        }
+                        try {
+                            optionPrice.setVolume(Integer.parseInt(tds.get(6).text().replace(",", "")));
+                        } catch (Exception e) {
+                            optionPrice.setVolume(0);
+                        }
+                        try {
+                            optionPrice.setOpenInt(Integer.parseInt(tds.get(7).text().replace(",", "")));
+                        } catch (Exception e) {
+                            optionPrice.setOpenInt(0);
+                        }
+                        //System.out.println(tds.get(0).text() + ":" + tds.get(1).text());
                         if (is_call == true) {
                             getCallOptionList().add(optionPrice);
-                            optionPrice.setSybol(tds.get(0).text());
-                            //  callList.put(tds.get(1).text(), tds.get(0).text());
+                            optionMonth.getOptionCallList().add(optionPrice);
+                                    
+
                         } else {
-                            //   putList.put(tds.get(1).text(), tds.get(0).text());
                             getPutOptionList().add(optionPrice);
-                            optionPrice.setSybol(tds.get(0).text());
+                            optionMonth.getOptionPutList().add(optionPrice);
                         }
                     }
-
                 }
                 is_call = false;
             }
@@ -141,6 +168,13 @@ public class DataFetch {
                     }
                 } //end for
                 reader.close();
+                Collections.reverse(getStockPrice().open);
+                Collections.reverse(getStockPrice().high);
+                Collections.reverse(getStockPrice().low);
+                Collections.reverse(getStockPrice().close);
+                Collections.reverse(getStockPrice().volume);
+                Collections.reverse(getStockPrice().adjClose);
+                
                 //    priceToMatalab();
                 //
             } catch (IOException ex) {
@@ -154,23 +188,22 @@ public class DataFetch {
 
 
     }
-    
-    public MWStructArray getCallOptionListToMatlab()
-    {
+
+    public MWStructArray getOptionCallListToMatlab() {
         return createOptionPriceStruct(callOptionList);
     }
-     public MWStructArray getOptionPutListToMatlab()
-    {
+
+    public MWStructArray getOptionPutListToMatlab() {
         return createOptionPriceStruct(putOptionList);
     }
-    
+
     private MWStructArray createOptionPriceStruct(ArrayList<OptionPrice> optionPriceArray) {
 
         int i = 1;
-        final String[] pricesFieldsNames = {"symbol", "strike", "last", "change", "bid", "ask", "openInt"};
+        final String[] pricesFieldsNames = {"symbol", "strike", "last", "change", "bid", "ask", "volume", "openInt"};
         MWStructArray matlabOptionPrice = new MWStructArray(optionPriceArray.size(), 1, pricesFieldsNames);
 
-   
+
         for (OptionPrice optionPrice : optionPriceArray) {
             matlabOptionPrice.set("symbol", i, optionPrice.getSybol());
             matlabOptionPrice.set("strike", i, optionPrice.getStrike());
@@ -179,12 +212,12 @@ public class DataFetch {
             matlabOptionPrice.set("bid", i, optionPrice.getBid());
             matlabOptionPrice.set("ask", i, optionPrice.getAsk());
             matlabOptionPrice.set("openInt", i, optionPrice.getOpenInt());
-            i=i+1;
+            matlabOptionPrice.set("volume", i, optionPrice.getVolume());
+            i = i + 1;
         }
         return matlabOptionPrice;
         // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
     }
-
 
     /**
      * @return the putOptionList
@@ -227,28 +260,6 @@ class OptionPrice {
     private String symbol;
     private Double strike, last, change, bid, ask;
     private Integer volume, openInt;
-    private MWStructArray prices;
-
-    
-    public void priceToMatalab() {
-
-        final String[] pricesFieldsNames = {"symbol", "strike", "last", "change", "bid", "ask", "openInt"};
-        setPrices(new MWStructArray(1, 1, pricesFieldsNames));
-        //	MWNumericArray openNumericArray = new MWNumericArray(molarArray, MWClassID.DOUBLE); 
-        //double[][] openArray = new double[1][open.size()];
-
-        getPrices().set("symbol", 1, symbol);
-        getPrices().set("strike", 1, getStrike());
-        getPrices().set("last", 1, getLast());
-        getPrices().set("change", 1, getChange());
-        getPrices().set("bid", 1, getBid());
-        getPrices().set("ask", 1, getAsk());
-        getPrices().set("openInt", 1, getOpenInt());
-
-
-
-        // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
-    }
 
     /**
      * @return the sybol
@@ -361,20 +372,6 @@ class OptionPrice {
     public void setOpenInt(Integer openInt) {
         this.openInt = openInt;
     }
-
-    /**
-     * @return the prices
-     */
-    public MWStructArray getPrices() {
-        return prices;
-    }
-
-    /**
-     * @param prices the prices to set
-     */
-    public void setPrices(MWStructArray prices) {
-        this.prices = prices;
-    }
 }
 
 class StockPrice {
@@ -429,5 +426,70 @@ class StockPrice {
     }
 }
 
+class OptionMonth {
+    private ArrayList<OptionPrice> optionPutList = new ArrayList<OptionPrice>();
+    private ArrayList<OptionPrice> optionCallList = new ArrayList<OptionPrice>();
+    private String month;
+    private Integer year;
+    private Integer day_at_month ;
     
-   
+    OptionMonth(Integer _year, Integer _month,Integer _day_at_month)
+    {
+        month = new DateFormatSymbols().getMonths()[_month];
+        year = _year;
+        day_at_month = 22;
+    }
+     
+    
+    public void optionPutList(OptionPrice optionPrice)
+    {
+        getOptionPutList().add(optionPrice);
+    }
+
+     public void optionCallList(OptionPrice optionPrice)
+    {
+        getOptionCallList().add(optionPrice);
+    }
+    /**
+     * @return the month
+     */
+    public String getMonth() {
+        return month;
+    }
+
+    /**
+     * @param month the month to set
+     */
+    public void setMonth(String month) {
+        this.month = month;
+    }
+
+    /**
+     * @return the year
+     */
+    public Integer getYear() {
+        return year;
+    }
+
+    /**
+     * @param year the year to set
+     */
+    public void setYear(Integer year) {
+        this.year = year;
+    }
+
+    /**
+     * @return the optionPutList
+     */
+    public ArrayList<OptionPrice> getOptionPutList() {
+        return optionPutList;
+    }
+
+    /**
+     * @return the optionCallList
+     */
+    public ArrayList<OptionPrice> getOptionCallList() {
+        return optionCallList;
+    }
+    
+}
