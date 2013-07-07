@@ -52,10 +52,10 @@ public class DataFetch {
 
 
         DataFetch tableEg = new DataFetch("AMD");
-        tableEg.fetchStock("27/6/2007", "28/2/2010");
+        tableEg.fetchStock("27/6/2007", "7/10/2012");
         
+        tableEg.fetchOptionData(2013, 6);
         tableEg.fetchOptionData(2013, 7);
-        tableEg.fetchOptionData(2013, 8);
         double[] d = tableEg.getStockPrice().getClose();
     }
 
@@ -71,7 +71,7 @@ public class DataFetch {
 
         getOptionMonthList().add(optionMonth);
 
-        String html = "http://finance.yahoo.com/q/op?s=" + stock + "+&m" + year + "-" + month;
+        String html = "http://finance.yahoo.com/q/op?s=" + stock + "&m=" + year + "-" + (month+1);
         try {
 
             boolean is_call = true;
@@ -144,7 +144,8 @@ public class DataFetch {
                 //try {
                 Reader reader = null;
                 InputStream input = null;
-                input = new URL("http://ichart.finance.yahoo.com/table.csv?s=" + stock + "&d=" + startDate.get(Calendar.DAY_OF_MONTH) + "&e=" + startDate.get(Calendar.MONTH) + "&f=" + startDate.get(Calendar.YEAR) + "&g=d&a=" + endDate.get(Calendar.DAY_OF_MONTH) + "&b=" + endDate.get(Calendar.MONTH) + "&c=" + endDate.get(Calendar.YEAR) + "&ignore=.csv").openStream();
+                String http = "http://ichart.finance.yahoo.com/table.csv?s=" + stock + "&a=" + startDate.get(Calendar.MONTH) + "&b=" + startDate.get(Calendar.DAY_OF_MONTH) + "&c=" + startDate.get(Calendar.YEAR) + "&d=" + endDate.get(Calendar.MONTH) + "&e=" + endDate.get(Calendar.DAY_OF_MONTH) + "&f=" + endDate.get(Calendar.YEAR) + "&g=d&ignore=.csv";
+                input = new URL(http).openStream();
                 reader = new InputStreamReader(input, "UTF-8");
                 BufferedReader brReadMe = new BufferedReader(reader);
                 String strLine = brReadMe.readLine();
