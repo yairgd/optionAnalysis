@@ -34,15 +34,15 @@ import com.mathworks.toolbox.javabuilder.MWStructArray;
 import java.text.DateFormatSymbols;
 import java.util.Collections;
 
+
 public class DataFetch {
 
     private String stock;
     private StockPrice stockPrice = new StockPrice();
-    private ArrayList<OptionPrice> putOptionList = new ArrayList<OptionPrice>();
-    private ArrayList<OptionPrice> callOptionList = new ArrayList<OptionPrice>();
-        private ArrayList<OptionMonth> optionMonthList = new ArrayList<OptionMonth>();
+    // private ArrayList<OptionPrice> putOptionList = new ArrayList<OptionPrice>();
+    // private ArrayList<OptionPrice> callOptionList = new ArrayList<OptionPrice>();
+    private ArrayList<OptionMonth> optionMonthList = new ArrayList<OptionMonth>();
 
-    
     public static void main(String[] args) throws ParseException {
         /*
          DateFormat df = new SimpleDateFormat("mm/dd/yyyy");
@@ -53,9 +53,10 @@ public class DataFetch {
 
         DataFetch tableEg = new DataFetch("AMD");
         tableEg.fetchStock("27/6/2007", "28/2/2010");
-        double[] d = tableEg.getStockPrice().getClose();
+        
         tableEg.fetchOptionData(2013, 7);
         tableEg.fetchOptionData(2013, 8);
+        double[] d = tableEg.getStockPrice().getClose();
     }
 
     public DataFetch(String _stock) {
@@ -65,9 +66,11 @@ public class DataFetch {
     public void fetchOptionData(double year, double month) {
         //String html = "http://publib.boulder.ibm.com/infocenter/iadthelp/v7r1/topic/" +
         //    "com.ibm.etools.iseries.toolbox.doc/htmtblex.htm";
-        OptionMonth optionMonth = new OptionMonth();
-        optionMonthList.add(optionMonth);
-        
+  
+        OptionMonth optionMonth = new OptionMonth(stock,(int) year, (int) month, 22);
+
+        getOptionMonthList().add(optionMonth);
+
         String html = "http://finance.yahoo.com/q/op?s=" + stock + "+&m" + year + "-" + month;
         try {
 
@@ -78,7 +81,7 @@ public class DataFetch {
                 Elements tableHeaderEles = table.select("th");
                 //System.out.println("headers");
                 for (int i = 0; i < tableHeaderEles.size(); i++) {
-                   // System.out.println(tableHeaderEles.get(i).text());
+                    // System.out.println(tableHeaderEles.get(i).text());
                 }
 
                 for (Element row : table.select("tr")) {
@@ -111,12 +114,10 @@ public class DataFetch {
                         }
                         //System.out.println(tds.get(0).text() + ":" + tds.get(1).text());
                         if (is_call == true) {
-                            getCallOptionList().add(optionPrice);
+                            //    getCallOptionList().add(optionPrice);
                             optionMonth.getOptionCallList().add(optionPrice);
-                                    
-
                         } else {
-                            getPutOptionList().add(optionPrice);
+                            //  getPutOptionList().add(optionPrice);
                             optionMonth.getOptionPutList().add(optionPrice);
                         }
                     }
@@ -174,7 +175,7 @@ public class DataFetch {
                 Collections.reverse(getStockPrice().close);
                 Collections.reverse(getStockPrice().volume);
                 Collections.reverse(getStockPrice().adjClose);
-                
+
                 //    priceToMatalab();
                 //
             } catch (IOException ex) {
@@ -189,14 +190,12 @@ public class DataFetch {
 
     }
 
-    public MWStructArray getOptionCallListToMatlab() {
-        return createOptionPriceStruct(callOptionList);
-    }
-
-    public MWStructArray getOptionPutListToMatlab() {
-        return createOptionPriceStruct(putOptionList);
-    }
-
+    // public MWStructArray getOptionCallListToMatlab() {
+    //    return createOptionPriceStruct(callOptionList);
+    // }
+    // public MWStructArray getOptionPutListToMatlab() {
+    //    return createOptionPriceStruct(putOptionList);
+    // }
     private MWStructArray createOptionPriceStruct(ArrayList<OptionPrice> optionPriceArray) {
 
         int i = 1;
@@ -222,24 +221,21 @@ public class DataFetch {
     /**
      * @return the putOptionList
      */
-    public ArrayList<OptionPrice> getPutOptionList() {
-        return putOptionList;
-    }
-
+    // public ArrayList<OptionPrice> getPutOptionList() {
+    //     return putOptionList;
+    //}
     /**
      * @return the callOptionList
      */
-    public ArrayList<OptionPrice> getCallOptionList() {
-        return callOptionList;
-    }
-
+    // public ArrayList<OptionPrice> getCallOptionList() {
+    //     return callOptionList;
+    // }
     /**
      * @param callOptionList the callOptionList to set
      */
-    public void setCallOptionList(ArrayList<OptionPrice> callOptionList) {
-        this.callOptionList = callOptionList;
-    }
-
+    //public void setCallOptionList(ArrayList<OptionPrice> callOptionList) {
+    //    this.callOptionList = callOptionList;
+    // }
     /**
      * @return the stockPrice
      */
@@ -253,8 +249,21 @@ public class DataFetch {
     public void setStockPrice(StockPrice stockPrice) {
         this.stockPrice = stockPrice;
     }
-}
 
+    /**
+     * @return the optionMonthList
+     */
+    public ArrayList<OptionMonth> getOptionMonthList() {
+        return optionMonthList;
+    }
+
+    /**
+     * @param optionMonthList the optionMonthList to set
+     */
+    public void setOptionMonthList(ArrayList<OptionMonth> optionMonthList) {
+        this.optionMonthList = optionMonthList;
+    }
+}
 class OptionPrice {
 
     private String symbol;
@@ -427,29 +436,81 @@ class StockPrice {
 }
 
 class OptionMonth {
+
     private ArrayList<OptionPrice> optionPutList = new ArrayList<OptionPrice>();
     private ArrayList<OptionPrice> optionCallList = new ArrayList<OptionPrice>();
     private String month;
     private Integer year;
-    private Integer day_at_month ;
+    private Integer day_at_month;
+    private String symbol;
     
-    OptionMonth(Integer _year, Integer _month,Integer _day_at_month)
-    {
+    OptionMonth(String _symbol, int _year, int _month, int _day_at_month) {
         month = new DateFormatSymbols().getMonths()[_month];
         year = _year;
-        day_at_month = 22;
+        day_at_month = _day_at_month;
+        symbol = _symbol;
     }
-     
-    
-    public void optionPutList(OptionPrice optionPrice)
-    {
+
+    private MWStructArray createOptionPriceStruct() {
+
+        int i ;
+        final String[] pricesFieldsNames = {"strike", "last", "change", "bid", "ask", "volume", "openInt"};
+        MWStructArray matlabOptionPrice ;//= new MWStructArray(optionPriceArray.size(), 1, pricesFieldsNames);
+
+
+        final String[] pricesFieldsNames1 = {"symbol", "month", "calls", "puts"};
+        
+        
+         MWStructArray optionStruct = new MWStructArray(1, 1, pricesFieldsNames1);
+         optionStruct.set("symbol", 1, symbol);
+         optionStruct.set("month", 1, month);
+         
+         // add put list
+        i = 1;
+        matlabOptionPrice = new MWStructArray(optionPutList.size(), 1, pricesFieldsNames);
+        for (OptionPrice optionPrice : optionPutList) {
+          //  matlabOptionPrice.set("symbol", i, optionPrice.getSybol());
+            matlabOptionPrice.set("strike", i, optionPrice.getStrike());
+            matlabOptionPrice.set("last", i, optionPrice.getLast());
+            matlabOptionPrice.set("change", i, optionPrice.getChange());
+            matlabOptionPrice.set("bid", i, optionPrice.getBid());
+            matlabOptionPrice.set("ask", i, optionPrice.getAsk());
+            matlabOptionPrice.set("openInt", i, optionPrice.getOpenInt());
+            matlabOptionPrice.set("volume", i, optionPrice.getVolume());
+            i = i + 1;
+        }
+        optionStruct.set("puts", 1, matlabOptionPrice);
+        
+         // add put list
+        i = 1;
+        matlabOptionPrice = new MWStructArray(optionCallList.size(), 1, pricesFieldsNames);
+        for (OptionPrice optionPrice : optionCallList) {
+          //  matlabOptionPrice.set("symbol", i, optionPrice.getSybol());
+            matlabOptionPrice.set("strike", i, optionPrice.getStrike());
+            matlabOptionPrice.set("last", i, optionPrice.getLast());
+            matlabOptionPrice.set("change", i, optionPrice.getChange());
+            matlabOptionPrice.set("bid", i, optionPrice.getBid());
+            matlabOptionPrice.set("ask", i, optionPrice.getAsk());
+            matlabOptionPrice.set("openInt", i, optionPrice.getOpenInt());
+            matlabOptionPrice.set("volume", i, optionPrice.getVolume());
+            i = i + 1;
+        }
+        optionStruct.set("calls", 1, matlabOptionPrice);
+         
+         
+         
+        return optionStruct;
+        // MWNumericArray openNumericArray = new MWNumericArray(openArray, MWClassID.DOUBLE); 
+    }
+
+    public void optionPutList(OptionPrice optionPrice) {
         getOptionPutList().add(optionPrice);
     }
 
-     public void optionCallList(OptionPrice optionPrice)
-    {
+    public void optionCallList(OptionPrice optionPrice) {
         getOptionCallList().add(optionPrice);
     }
+
     /**
      * @return the month
      */
@@ -491,5 +552,10 @@ class OptionMonth {
     public ArrayList<OptionPrice> getOptionCallList() {
         return optionCallList;
     }
-    
+
+    public MWStructArray getOptionMonthToMatlab() {
+        return createOptionPriceStruct();
+    }
+
+ 
 }
